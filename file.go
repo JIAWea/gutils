@@ -2,6 +2,9 @@ package gutils
 
 import (
 	"bufio"
+	"crypto/md5"
+	"encoding/csv"
+	"encoding/hex"
 	"io"
 	"io/ioutil"
 	"os"
@@ -147,4 +150,36 @@ func FileReadByLine(fileName string, logic func(line string) error) error {
 		}
 	}
 	return nil
+}
+
+func ReadFromCsv(filename string) ([][]string, error) {
+	f, err := os.Open(filename) // 打开文件
+	if err != nil {
+		return nil, err
+	}
+	var recordAll [][]string
+
+	r := csv.NewReader(f)
+	recordAll, err = r.ReadAll()
+	if err != nil {
+		return nil, err
+	}
+
+	return recordAll, nil
+}
+
+func GetFileHash(file string) (string, error) {
+	f, err := os.Open(file)
+	if err != nil {
+		return "", err
+	}
+	defer func() {
+		_ = f.Close()
+	}()
+	hash := md5.New()
+	_, err = io.Copy(hash, f)
+	if err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(hash.Sum(nil)), nil
 }
